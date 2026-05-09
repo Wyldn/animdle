@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Animdle — Anime Card Gacha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Rajdhani:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:       #06060f;
+  --bg2:      #0d0d1e;
+  --bg3:      #12122a;
+  --panel:    #16163a;
+  --border:   rgba(120,80,255,0.18);
+  --border2:  rgba(120,80,255,0.38);
+  --purple:   #7c3aed;
+  --purple2:  #a855f7;
+  --pink:     #ec4899;
+  --cyan:     #06b6d4;
+  --gold:     #f59e0b;
+  --text:     #e2e0ff;
+  --muted:    #7b7aa8;
+  --common:   #6b7280;
+  --rare:     #3b82f6;
+  --epic:     #a855f7;
+  --legendary:#f59e0b;
+  --glow-p:   rgba(124,58,237,0.4);
+  --glow-pk:  rgba(236,72,153,0.4);
+  --glow-c:   rgba(6,182,212,0.4);
+  --glow-g:   rgba(245,158,11,0.5);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Rajdhani',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* Animated star background */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124,58,237,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 90%, rgba(236,72,153,0.1) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(6,182,212,0.05) 0%, transparent 60%);
+  pointer-events:none;z-index:0;
+}
+
+/* Sakura particles */
+.sakura-container{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden;}
+.petal{
+  position:absolute;top:-20px;
+  width:8px;height:10px;
+  background:rgba(236,72,153,0.35);
+  border-radius:50% 0 50% 0;
+  animation:fall linear infinite;
+  opacity:0;
+}
+@keyframes fall{
+  0%{transform:translateY(0) rotate(0deg) translateX(0);opacity:0;}
+  5%{opacity:1;}
+  90%{opacity:0.5;}
+  100%{transform:translateY(110vh) rotate(720deg) translateX(60px);opacity:0;}
+}
+
+/* ===================== SCREENS ===================== */
+.screen{display:none;position:relative;z-index:10;min-height:100vh;}
+.screen.active{display:flex;}
+
+/* ===================== LOGIN ===================== */
+#login-screen{
+  flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:2rem;
+}
+
+.login-logo{
+  text-align:center;margin-bottom:2.5rem;
+}
+.login-logo h1{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(2.2rem,6vw,4rem);
+  font-weight:900;
+  background:linear-gradient(135deg,#a855f7,#ec4899,#06b6d4);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  text-shadow:none;
+  letter-spacing:0.05em;
+  line-height:1.1;
+}
+.login-logo .subtitle{
+  font-family:'Noto Sans JP',sans-serif;
+  font-size:0.85rem;color:var(--muted);
+  letter-spacing:0.25em;margin-top:0.4rem;
+  text-transform:uppercase;
+}
+
+.login-card{
+  background:var(--panel);
+  border:1px solid var(--border2);
+  border-radius:16px;
+  padding:2.5rem 2rem;
+  width:100%;max-width:400px;
+  box-shadow:0 0 60px rgba(124,58,237,0.2),0 0 120px rgba(236,72,153,0.1);
+  position:relative;overflow:hidden;
+}
+.login-card::before{
+  content:'';position:absolute;top:-1px;left:20%;right:20%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--purple2),transparent);
+}
+
+.tab-switcher{
+  display:flex;gap:0;margin-bottom:1.8rem;
+  border:1px solid var(--border);border-radius:8px;overflow:hidden;
+}
+.tab-btn{
+  flex:1;padding:0.6rem;background:transparent;border:none;
+  color:var(--muted);font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:600;
+  cursor:pointer;transition:all 0.25s;letter-spacing:0.05em;
+}
+.tab-btn.active{
+  background:linear-gradient(135deg,var(--purple),var(--pink));
+  color:#fff;
+}
+
+.form-group{margin-bottom:1.2rem;}
+.form-group label{
+  display:block;font-size:0.8rem;color:var(--muted);
+  letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.4rem;
+}
+.form-group input{
+  width:100%;padding:0.75rem 1rem;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-family:'Rajdhani',sans-serif;font-size:1rem;
+  outline:none;transition:border-color 0.2s,box-shadow 0.2s;
+}
+.form-group input:focus{
+  border-color:var(--purple2);
+  box-shadow:0 0 0 3px rgba(168,85,247,0.15);
+}
+
+.btn-primary{
+  width:100%;padding:0.85rem;
+  background:linear-gradient(135deg,var(--purple),var(--pink));
+  border:none;border-radius:8px;
+  color:#fff;font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:700;
+  letter-spacing:0.08em;cursor:pointer;
+  transition:opacity 0.2s,transform 0.15s,box-shadow 0.2s;
+  box-shadow:0 4px 20px rgba(124,58,237,0.4);
+}
+.btn-primary:hover{opacity:0.9;box-shadow:0 6px 28px rgba(236,72,153,0.45);}
+.btn-primary:active{transform:scale(0.98);}
+
+.error-msg{
+  color:#f87171;font-size:0.85rem;text-align:center;
+  margin-top:0.8rem;min-height:1.2rem;
+}
+
+/* ===================== MAIN APP ===================== */
+#app-screen{flex-direction:column;}
+
+/* NAV */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(6,6,15,0.85);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding:0 1.5rem;height:60px;gap:0.5rem;
+}
+.nav-logo{
+  font-family:'Cinzel Decorative',serif;font-size:1.1rem;font-weight:700;
+  background:linear-gradient(135deg,#a855f7,#ec4899);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-right:1rem;white-space:nowrap;
+}
+.nav-links{display:flex;gap:0.25rem;flex:1;}
+.nav-btn{
+  padding:0.4rem 0.9rem;background:transparent;border:none;
+  color:var(--muted);font-family:'Rajdhani',sans-serif;font-size:0.95rem;font-weight:600;
+  cursor:pointer;border-radius:8px;transition:all 0.2s;letter-spacing:0.04em;
+  white-space:nowrap;
+}
+.nav-btn:hover{color:var(--text);background:rgba(255,255,255,0.06);}
+.nav-btn.active{
+  color:#fff;
+  background:linear-gradient(135deg,rgba(124,58,237,0.35),rgba(236,72,153,0.25));
+  border:1px solid rgba(168,85,247,0.3);
+}
+.nav-user{
+  margin-left:auto;display:flex;align-items:center;gap:0.75rem;
+}
+.user-avatar{
+  width:34px;height:34px;border-radius:50%;
+  background:linear-gradient(135deg,var(--purple),var(--pink));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:0.9rem;color:#fff;
+  border:2px solid var(--border2);
+}
+.nav-username{font-size:0.9rem;color:var(--muted);}
+.btn-logout{
+  padding:0.35rem 0.8rem;background:transparent;
+  border:1px solid var(--border);border-radius:6px;
+  color:var(--muted);font-family:'Rajdhani',sans-serif;font-size:0.85rem;
+  cursor:pointer;transition:all 0.2s;
+}
+.btn-logout:hover{border-color:var(--pink);color:var(--pink);}
+
+/* PAGES */
+.page{display:none;padding:2rem 1.5rem;max-width:1200px;margin:0 auto;width:100%;}
+.page.active{display:block;}
+
+.page-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.6rem;font-weight:700;margin-bottom:0.3rem;
+  background:linear-gradient(135deg,#a855f7,#ec4899);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.page-sub{color:var(--muted);font-size:0.9rem;margin-bottom:2rem;}
+
+/* ===================== ROLL PAGE ===================== */
+.roll-area{
+  display:flex;flex-direction:column;align-items:center;gap:2rem;
+  padding:1rem 0 2rem;
+}
+
+.roll-btn-wrap{position:relative;display:inline-flex;}
+.btn-roll{
+  padding:1rem 3rem;font-size:1.3rem;font-weight:700;
+  font-family:'Cinzel Decorative',serif;letter-spacing:0.08em;
+  background:linear-gradient(135deg,#7c3aed,#ec4899,#06b6d4);
+  background-size:200% 200%;
+  animation:gradshift 3s ease infinite;
+  border:none;border-radius:12px;color:#fff;cursor:pointer;
+  box-shadow:0 0 30px rgba(124,58,237,0.5),0 0 60px rgba(236,72,153,0.2);
+  transition:transform 0.15s,box-shadow 0.2s;
+  position:relative;overflow:hidden;
+}
+.btn-roll::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.1),transparent);
+  pointer-events:none;
+}
+.btn-roll:hover{transform:scale(1.05);box-shadow:0 0 50px rgba(124,58,237,0.7),0 0 80px rgba(236,72,153,0.3);}
+.btn-roll:active{transform:scale(0.97);}
+.btn-roll:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+@keyframes gradshift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+
+.roll-counter{color:var(--muted);font-size:0.9rem;text-align:center;}
+.roll-counter span{color:var(--gold);font-weight:700;}
+
+/* Card reveal */
+.card-reveal{
+  perspective:1000px;
+  width:280px;
+}
+.card-inner{
+  position:relative;width:100%;
+  transform-style:preserve-3d;
+  transition:transform 0.7s cubic-bezier(0.4,0,0.2,1);
+}
+.card-inner.flipped{transform:rotateY(180deg);}
+.card-face{
+  width:100%;backface-visibility:hidden;
+  border-radius:16px;overflow:hidden;
+}
+.card-back-face{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  background:linear-gradient(135deg,var(--panel),var(--bg3));
+  border:2px solid var(--border2);border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  backface-visibility:hidden;
+}
+.card-back-pattern{
+  font-family:'Cinzel Decorative',serif;font-size:2rem;
+  background:linear-gradient(135deg,var(--purple),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  text-align:center;padding:2rem;
+}
+.card-front-face{transform:rotateY(180deg);backface-visibility:hidden;}
+
+/* The actual anime card */
+.anime-card{
+  border-radius:16px;overflow:hidden;
+  border:2px solid var(--border2);
+  background:var(--panel);
+  position:relative;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+  cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+  width:100%;
+}
+.anime-card:hover{transform:translateY(-4px);}
+.anime-card.rarity-rare{border-color:var(--rare);box-shadow:0 0 30px rgba(59,130,246,0.4);}
+.anime-card.rarity-epic{border-color:var(--epic);box-shadow:0 0 30px rgba(168,85,247,0.5);}
+.anime-card.rarity-legendary{border-color:var(--gold);box-shadow:0 0 40px rgba(245,158,11,0.5),0 0 80px rgba(245,158,11,0.2);}
+.anime-card.rarity-legendary::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(245,158,11,0.08),transparent,rgba(245,158,11,0.05));
+  pointer-events:none;z-index:1;
+}
+
+.card-img{width:100%;height:220px;object-fit:cover;object-position:top;display:block;}
+.card-img-placeholder{width:100%;height:220px;background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:2rem;}
+.card-body{padding:1rem;}
+.card-rarity{
+  display:inline-flex;align-items:center;gap:0.3rem;
+  font-size:0.7rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+  padding:0.2rem 0.6rem;border-radius:4px;margin-bottom:0.5rem;
+}
+.rarity-common .card-rarity{background:rgba(107,114,128,0.2);color:var(--common);}
+.rarity-rare .card-rarity{background:rgba(59,130,246,0.2);color:var(--rare);}
+.rarity-epic .card-rarity{background:rgba(168,85,247,0.2);color:var(--epic);}
+.rarity-legendary .card-rarity{background:rgba(245,158,11,0.2);color:var(--gold);}
+
+.card-char-name{font-size:1.15rem;font-weight:700;margin-bottom:0.15rem;line-height:1.2;}
+.card-anime-name{font-size:0.8rem;color:var(--cyan);margin-bottom:0.6rem;font-weight:600;}
+.card-desc{font-size:0.78rem;color:var(--muted);line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+
+.card-actions{display:flex;gap:0.5rem;margin-top:0.8rem;}
+.btn-sm{
+  flex:1;padding:0.45rem 0.5rem;border-radius:6px;
+  font-family:'Rajdhani',sans-serif;font-size:0.82rem;font-weight:700;
+  cursor:pointer;transition:all 0.2s;letter-spacing:0.04em;border:1px solid;
+}
+.btn-trade{
+  background:rgba(6,182,212,0.1);border-color:rgba(6,182,212,0.3);color:var(--cyan);
+}
+.btn-trade:hover{background:rgba(6,182,212,0.2);border-color:var(--cyan);}
+
+/* Shine animation on roll */
+@keyframes shine{
+  0%{transform:translateX(-150%) skewX(-20deg);}
+  100%{transform:translateX(350%) skewX(-20deg);}
+}
+.anime-card.just-rolled::after{
+  content:'';position:absolute;top:0;left:0;
+  width:40%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent);
+  animation:shine 0.8s ease forwards;
+  pointer-events:none;z-index:5;
+}
+
+/* Rarity sparks */
+@keyframes sparkle{
+  0%,100%{opacity:0;transform:scale(0);}
+  50%{opacity:1;transform:scale(1);}
+}
+
+/* ===================== COLLECTION ===================== */
+.collection-filters{
+  display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.5rem;align-items:center;
+}
+.filter-btn{
+  padding:0.35rem 0.9rem;border-radius:20px;
+  font-family:'Rajdhani',sans-serif;font-size:0.85rem;font-weight:600;
+  cursor:pointer;transition:all 0.2s;
+  background:transparent;border:1px solid var(--border);color:var(--muted);
+}
+.filter-btn.active{
+  background:linear-gradient(135deg,rgba(124,58,237,0.3),rgba(236,72,153,0.2));
+  border-color:var(--purple2);color:var(--text);
+}
+.collection-search{
+  margin-left:auto;
+  padding:0.4rem 0.9rem;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);border-radius:20px;
+  color:var(--text);font-family:'Rajdhani',sans-serif;font-size:0.9rem;
+  outline:none;width:200px;
+  transition:border-color 0.2s;
+}
+.collection-search:focus{border-color:var(--purple2);}
+.collection-stats{
+  display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;
+}
+.stat-chip{
+  padding:0.4rem 1rem;border-radius:8px;
+  background:var(--panel);border:1px solid var(--border);
+  font-size:0.85rem;color:var(--muted);
+}
+.stat-chip strong{color:var(--text);}
+
+.card-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:1.2rem;
+}
+.empty-state{
+  text-align:center;padding:4rem 2rem;color:var(--muted);
+  grid-column:1/-1;
+}
+.empty-state .empty-icon{font-size:3rem;margin-bottom:1rem;opacity:0.4;}
+.empty-state p{font-size:1.1rem;}
+
+/* ===================== TRADE ===================== */
+.trade-layout{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+@media(max-width:700px){.trade-layout{grid-template-columns:1fr;}}
+
+.trade-panel{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:12px;padding:1.2rem;
+}
+.trade-panel h3{
+  font-size:1rem;font-weight:700;letter-spacing:0.06em;
+  margin-bottom:1rem;color:var(--purple2);text-transform:uppercase;
+}
+
+.offer-form{display:flex;flex-direction:column;gap:0.8rem;}
+.offer-form label{font-size:0.8rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;}
+.offer-form select,.offer-form input{
+  width:100%;padding:0.6rem 0.8rem;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-family:'Rajdhani',sans-serif;font-size:0.95rem;
+  outline:none;transition:border-color 0.2s;
+  -webkit-appearance:none;
+}
+.offer-form select:focus,.offer-form input:focus{border-color:var(--purple2);}
+.offer-form select option{background:var(--bg2);}
+
+.trade-offer-card{
+  background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:1rem;display:flex;gap:0.8rem;align-items:center;
+  margin-bottom:0.6rem;
+  transition:border-color 0.2s;
+}
+.trade-offer-card:hover{border-color:var(--border2);}
+.trade-offer-card .offer-img{
+  width:50px;height:60px;object-fit:cover;object-position:top;
+  border-radius:6px;flex-shrink:0;background:var(--bg2);
+}
+.offer-info{flex:1;min-width:0;}
+.offer-info .char-name{font-weight:700;font-size:0.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.offer-info .anime-name{font-size:0.78rem;color:var(--cyan);}
+.offer-info .rarity-badge{font-size:0.7rem;font-weight:700;}
+.offer-actions{display:flex;flex-direction:column;gap:0.4rem;}
+.btn-accept{
+  padding:0.35rem 0.7rem;border-radius:6px;
+  background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.35);
+  color:#4ade80;font-family:'Rajdhani',sans-serif;font-size:0.8rem;font-weight:700;
+  cursor:pointer;transition:all 0.2s;
+}
+.btn-accept:hover{background:rgba(34,197,94,0.25);}
+.btn-decline{
+  padding:0.35rem 0.7rem;border-radius:6px;
+  background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);
+  color:#f87171;font-family:'Rajdhani',sans-serif;font-size:0.8rem;font-weight:700;
+  cursor:pointer;transition:all 0.2s;
+}
+.btn-decline:hover{background:rgba(239,68,68,0.2);}
+
+/* ===================== TOAST ===================== */
+.toast-container{
+  position:fixed;top:70px;right:1.5rem;z-index:9999;
+  display:flex;flex-direction:column;gap:0.5rem;
+  pointer-events:none;
+}
+.toast{
+  padding:0.75rem 1.2rem;
+  background:var(--panel);border:1px solid var(--border2);border-radius:10px;
+  font-size:0.9rem;font-weight:600;
+  box-shadow:0 8px 30px rgba(0,0,0,0.5);
+  animation:slideIn 0.3s ease, fadeOut 0.4s ease 2.6s forwards;
+  pointer-events:auto;
+}
+.toast.success{border-color:rgba(74,222,128,0.4);color:#4ade80;}
+.toast.error{border-color:rgba(248,113,113,0.4);color:#f87171;}
+.toast.info{border-color:var(--border2);color:var(--purple2);}
+@keyframes slideIn{from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);}}
+@keyframes fadeOut{to{opacity:0;transform:translateX(40px);}}
+
+/* ===================== MODAL ===================== */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.75);
+  z-index:500;display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);padding:1rem;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--panel);border:1px solid var(--border2);border-radius:16px;
+  padding:1.8rem;width:100%;max-width:480px;
+  box-shadow:0 30px 80px rgba(0,0,0,0.7);
+  position:relative;
+  animation:modalIn 0.3s ease;
+}
+@keyframes modalIn{from{opacity:0;transform:scale(0.92);}to{opacity:1;transform:scale(1);}}
+.modal h2{font-family:'Cinzel Decorative',serif;font-size:1.2rem;margin-bottom:1rem;
+  background:linear-gradient(135deg,var(--purple2),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.modal-close{
+  position:absolute;top:1rem;right:1rem;
+  background:transparent;border:none;color:var(--muted);
+  font-size:1.3rem;cursor:pointer;line-height:1;
+  transition:color 0.2s;
+}
+.modal-close:hover{color:var(--pink);}
+.modal .full-desc{font-size:0.9rem;color:var(--muted);line-height:1.65;margin-top:0.5rem;}
+.modal .full-img{width:100%;max-height:260px;object-fit:cover;object-position:top;border-radius:10px;margin-bottom:1rem;}
+.modal .char-full-name{font-size:1.3rem;font-weight:700;margin-bottom:0.2rem;}
+.modal .anime-full-name{font-size:0.9rem;color:var(--cyan);margin-bottom:0.8rem;}
+
+/* Leaderboard / users section */
+.user-list{display:flex;flex-direction:column;gap:0.6rem;}
+.user-row{
+  display:flex;align-items:center;gap:1rem;
+  background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:0.75rem 1rem;cursor:pointer;transition:border-color 0.2s;
+}
+.user-row:hover{border-color:var(--border2);}
+.user-row .u-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--purple),var(--cyan));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:0.85rem;flex-shrink:0;
+}
+.user-row .u-name{font-weight:700;}
+.user-row .u-cards{font-size:0.82rem;color:var(--muted);}
+.user-row .u-offer{
+  margin-left:auto;padding:0.3rem 0.7rem;border-radius:6px;
+  background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.3);
+  color:var(--cyan);font-size:0.8rem;font-weight:700;font-family:'Rajdhani',sans-serif;
+  cursor:pointer;transition:all 0.2s;
+}
+.u-offer:hover{background:rgba(6,182,212,0.2);}
+
+/* Loading spinner */
+.spinner{
+  display:inline-block;width:20px;height:20px;
+  border:2px solid rgba(168,85,247,0.3);border-top-color:var(--purple2);
+  border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Responsive */
+@media(max-width:600px){
+  .card-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
+  nav{padding:0 0.75rem;}
+  .nav-logo{font-size:0.9rem;}
+  .nav-btn{padding:0.35rem 0.6rem;font-size:0.85rem;}
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--purple);border-radius:3px;}
+
+/* Notification dot */
+.notif-dot{
+  display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:var(--pink);margin-left:4px;vertical-align:middle;
+  animation:pulse 1.5s ease infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.6;transform:scale(0.8);}}
+
+.legendary-sparkle{
+  position:absolute;inset:0;pointer-events:none;z-index:2;
+}
+</style>
+</head>
+<body>
+
+<!-- Sakura petals -->
+<div class="sakura-container" id="sakura"></div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===================== LOGIN SCREEN ===================== -->
+<div class="screen active" id="login-screen">
+  <div class="login-logo">
+    <h1>ANIMDLE</h1>
+    <p class="subtitle">Collect · Trade · Discover</p>
+  </div>
+  <div class="login-card">
+    <div class="tab-switcher">
+      <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Login</button>
+      <button class="tab-btn" id="tab-register" onclick="switchTab('register')">Register</button>
+    </div>
+
+    <!-- Login Form -->
+    <div id="form-login">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="login-username" placeholder="your username" autocomplete="username"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+      <button class="btn-primary" onclick="handleLogin()">Enter the Realm</button>
+      <div class="error-msg" id="login-error"></div>
+    </div>
+
+    <!-- Register Form -->
+    <div id="form-register" style="display:none">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="reg-username" placeholder="choose a username"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="at least 4 characters"/>
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" id="reg-confirm" placeholder="repeat password"/>
+      </div>
+      <button class="btn-primary" onclick="handleRegister()">Create Account</button>
+      <div class="error-msg" id="reg-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== APP SCREEN ===================== -->
+<div class="screen" id="app-screen">
+  <!-- Nav -->
+  <nav>
+    <span class="nav-logo">ANIMDLE</span>
+    <div class="nav-links">
+      <button class="nav-btn active" id="nav-roll" onclick="showPage('roll')">⚡ Roll</button>
+      <button class="nav-btn" id="nav-collection" onclick="showPage('collection')">📦 Collection</button>
+      <button class="nav-btn" id="nav-trade" onclick="showPage('trade')">🔄 Trade <span class="notif-dot" id="trade-notif" style="display:none"></span></button>
+      <button class="nav-btn" id="nav-browse" onclick="showPage('browse')">👥 Browse</button>
+    </div>
+    <div class="nav-user">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <span class="nav-username" id="nav-username"></span>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <!-- ===== ROLL PAGE ===== -->
+  <div class="page active" id="page-roll">
+    <div class="page-title">Summon Chamber</div>
+    <p class="page-sub">Call forth an anime character from across every realm</p>
+    <div class="roll-area">
+      <p class="roll-counter">Total rolls: <span id="roll-count">0</span> &nbsp;|&nbsp; Collection: <span id="roll-collection-count">0</span> cards</p>
+
+      <!-- Card flip reveal -->
+      <div class="card-reveal" id="cardReveal" style="display:none">
+        <div class="card-inner" id="cardInner">
+          <div class="card-face card-back-face">
+            <div class="card-back-pattern">✦<br/>ANIMDLE<br/>✦</div>
+          </div>
+          <div class="card-face card-front-face" id="cardFrontFace"></div>
+        </div>
+      </div>
+
+      <div id="rollSpinner" style="display:none;text-align:center;color:var(--muted)">
+        <div class="spinner"></div> <span style="margin-left:0.5rem">Summoning...</span>
+      </div>
+
+      <button class="btn-roll" id="rollBtn" onclick="doRoll()">✦ SUMMON ✦</button>
+    </div>
+  </div>
+
+  <!-- ===== COLLECTION PAGE ===== -->
+  <div class="page" id="page-collection">
+    <div class="page-title">My Collection</div>
+    <p class="page-sub">All the characters you've summoned</p>
+    <div class="collection-stats">
+      <div class="stat-chip">Total: <strong id="col-total">0</strong></div>
+      <div class="stat-chip" style="border-color:rgba(245,158,11,0.3)">⭐ Legendary: <strong id="col-legendary" style="color:var(--gold)">0</strong></div>
+      <div class="stat-chip" style="border-color:rgba(168,85,247,0.3)">💜 Epic: <strong id="col-epic" style="color:var(--epic)">0</strong></div>
+      <div class="stat-chip" style="border-color:rgba(59,130,246,0.3)">💙 Rare: <strong id="col-rare" style="color:var(--rare)">0</strong></div>
+    </div>
+    <div class="collection-filters">
+      <button class="filter-btn active" onclick="filterCollection('all',this)">All</button>
+      <button class="filter-btn" onclick="filterCollection('legendary',this)">⭐ Legendary</button>
+      <button class="filter-btn" onclick="filterCollection('epic',this)">💜 Epic</button>
+      <button class="filter-btn" onclick="filterCollection('rare',this)">💙 Rare</button>
+      <button class="filter-btn" onclick="filterCollection('common',this)">⬜ Common</button>
+      <input class="collection-search" id="col-search" placeholder="Search character..." oninput="renderCollection()"/>
+    </div>
+    <div class="card-grid" id="collectionGrid"></div>
+  </div>
+
+  <!-- ===== TRADE PAGE ===== -->
+  <div class="page" id="page-trade">
+    <div class="page-title">Trade Market</div>
+    <p class="page-sub">Send and receive trade offers with other collectors</p>
+    <div class="trade-layout">
+      <!-- Send a trade -->
+      <div class="trade-panel">
+        <h3>📤 Send Offer</h3>
+        <div class="offer-form">
+          <label>Target User</label>
+          <select id="trade-target-user" onchange="loadTargetCards()">
+            <option value="">— select a user —</option>
+          </select>
+          <label>Your Card to Offer</label>
+          <select id="trade-your-card">
+            <option value="">— your cards —</option>
+          </select>
+          <label>Card You Want (from them)</label>
+          <select id="trade-their-card">
+            <option value="">— their cards —</option>
+          </select>
+          <button class="btn-primary" onclick="sendTradeOffer()" style="margin-top:0.4rem">Send Trade Offer</button>
+        </div>
+      </div>
+      <!-- Incoming offers -->
+      <div class="trade-panel">
+        <h3>📥 Incoming Offers</h3>
+        <div id="incomingOffers">
+          <div style="color:var(--muted);font-size:0.9rem">No pending offers.</div>
+        </div>
+      </div>
+    </div>
+    <!-- Outgoing offers -->
+    <div class="trade-panel" style="margin-top:1.2rem">
+      <h3>⏳ My Sent Offers</h3>
+      <div id="sentOffers">
+        <div style="color:var(--muted);font-size:0.9rem">No sent offers.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== BROWSE PAGE ===== -->
+  <div class="page" id="page-browse">
+    <div class="page-title">Browse Collectors</div>
+    <p class="page-sub">View other players' collections and challenge them to a trade</p>
+    <div class="user-list" id="userList"></div>
+  </div>
+</div>
+
+<!-- Card Detail Modal -->
+<div class="modal-overlay" id="cardModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <img class="full-img" id="modal-img" src="" alt=""/>
+    <div id="modal-rarity" class="card-rarity" style="margin-bottom:0.5rem"></div>
+    <div class="char-full-name" id="modal-name"></div>
+    <div class="anime-full-name" id="modal-anime"></div>
+    <p class="full-desc" id="modal-desc"></p>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA LAYER — localStorage
+// ============================================================
+const DB = {
+  get(k){try{return JSON.parse(localStorage.getItem('animdle_'+k));}catch{return null;}},
+  set(k,v){localStorage.setItem('animdle_'+k,JSON.stringify(v));},
+  users(){return this.get('users')||[];},
+  cards(){return this.get('cards')||[];},
+  trades(){return this.get('trades')||[];},
+  saveUsers(u){this.set('users',u);},
+  saveCards(c){this.set('cards',c);},
+  saveTrades(t){this.set('trades',t);},
+};
+
+let currentUser = null;
+let currentFilter = 'all';
+
+// ============================================================
+// SAKURA
+// ============================================================
+(function(){
+  const c = document.getElementById('sakura');
+  for(let i=0;i<18;i++){
+    const p = document.createElement('div');
+    p.className='petal';
+    p.style.left = Math.random()*100+'%';
+    p.style.animationDuration = (8+Math.random()*12)+'s';
+    p.style.animationDelay = (-Math.random()*15)+'s';
+    p.style.transform = `scale(${0.6+Math.random()*0.8})`;
+    p.style.opacity = 0.2+Math.random()*0.4;
+    c.appendChild(p);
+  }
+})();
+
+// ============================================================
+// AUTH
+// ============================================================
+function switchTab(t){
+  document.getElementById('form-login').style.display = t==='login'?'block':'none';
+  document.getElementById('form-register').style.display = t==='register'?'block':'none';
+  document.getElementById('tab-login').classList.toggle('active',t==='login');
+  document.getElementById('tab-register').classList.toggle('active',t==='register');
+  document.getElementById('login-error').textContent='';
+  document.getElementById('reg-error').textContent='';
+}
+
+function handleLogin(){
+  const u=document.getElementById('login-username').value.trim();
+  const p=document.getElementById('login-password').value;
+  const err=document.getElementById('login-error');
+  if(!u||!p){err.textContent='Please fill in all fields.';return;}
+  const users=DB.users();
+  const user=users.find(x=>x.username.toLowerCase()===u.toLowerCase()&&x.password===p);
+  if(!user){err.textContent='Invalid username or password.';return;}
+  err.textContent='';
+  loginSuccess(user);
+}
+
+function handleRegister(){
+  const u=document.getElementById('reg-username').value.trim();
+  const p=document.getElementById('reg-password').value;
+  const c=document.getElementById('reg-confirm').value;
+  const err=document.getElementById('reg-error');
+  if(!u||!p||!c){err.textContent='All fields required.';return;}
+  if(p.length<4){err.textContent='Password must be at least 4 characters.';return;}
+  if(p!==c){err.textContent='Passwords do not match.';return;}
+  const users=DB.users();
+  if(users.find(x=>x.username.toLowerCase()===u.toLowerCase())){err.textContent='Username already taken.';return;}
+  const newUser={id:'u_'+Date.now(),username:u,password:p,rolls:0,joinedAt:Date.now()};
+  users.push(newUser);
+  DB.saveUsers(users);
+  err.style.color='#4ade80';err.textContent='Account created! Logging in...';
+  setTimeout(()=>loginSuccess(newUser),700);
+}
+
+function loginSuccess(user){
+  currentUser=user;
+  document.getElementById('login-screen').classList.remove('active');
+  document.getElementById('app-screen').classList.add('active');
+  document.getElementById('nav-username').textContent=user.username;
+  document.getElementById('user-avatar').textContent=user.username[0].toUpperCase();
+  showPage('roll');
+  updateRollStats();
+  checkTradeNotifs();
+}
+
+function logout(){
+  currentUser=null;
+  document.getElementById('app-screen').classList.remove('active');
+  document.getElementById('login-screen').classList.add('active');
+  document.getElementById('login-username').value='';
+  document.getElementById('login-password').value='';
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.getElementById('nav-'+p).classList.add('active');
+  if(p==='collection'){currentFilter='all';renderCollection();}
+  if(p==='trade'){renderTradePage();}
+  if(p==='browse'){renderBrowsePage();}
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function toast(msg,type='info'){
+  const c=document.getElementById('toastContainer');
+  const t=document.createElement('div');
+  t.className='toast '+type;t.textContent=msg;
+  c.appendChild(t);
+  setTimeout(()=>t.remove(),3100);
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function openCardModal(card){
+  document.getElementById('modal-img').src=card.image||'';
+  document.getElementById('modal-img').style.display=card.image?'block':'none';
+  document.getElementById('modal-name').textContent=card.characterName;
+  document.getElementById('modal-anime').textContent=card.animeName;
+  document.getElementById('modal-desc').textContent=card.description||'No description available.';
+  const rb=document.getElementById('modal-rarity');
+  rb.textContent=card.rarity.toUpperCase();
+  rb.style.cssText='display:inline-block;';
+  rb.className='card-rarity';
+  document.getElementById('cardModal').classList.add('open');
+}
+function closeModal(){document.getElementById('cardModal').classList.remove('open');}
+document.getElementById('cardModal').addEventListener('click',e=>{if(e.target.id==='cardModal')closeModal();});
+
+// ============================================================
+// ANILIST API
+// ============================================================
+async function fetchRandomCharacter(){
+  const page=Math.floor(Math.random()*50)+1;
+  const query=`query($page:Int){Page(page:$page,perPage:10){characters(sort:FAVOURITES_DESC){id name{full}image{large}description(asHtml:false)media(sort:POPULARITY_DESC,perPage:1){nodes{title{romaji}type}}}}}`;
+  try{
+    const r=await fetch('https://graphql.anilist.co',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({query,variables:{page}})
+    });
+    const d=await r.json();
+    const chars=d.data.Page.characters.filter(c=>c.media.nodes.length>0&&c.image.large&&!c.image.large.includes('default'));
+    if(!chars.length)return fetchRandomCharacter();
+    const ch=chars[Math.floor(Math.random()*chars.length)];
+    const fav=ch.favourites||0;
+    let rarity='common';
+    if(fav>20000)rarity='legendary';
+    else if(fav>5000)rarity='epic';
+    else if(fav>1000)rarity='rare';
+    return{
+      id:'card_'+Date.now()+'_'+Math.random().toString(36).slice(2),
+      ownerId:currentUser.id,
+      characterId:ch.id,
+      characterName:ch.name.full,
+      animeName:ch.media.nodes[0].title.romaji,
+      animeType:ch.media.nodes[0].type,
+      image:ch.image.large,
+      description:(ch.description||'').replace(/<[^>]*>/g,'').slice(0,300),
+      rarity,
+      favourites:fav,
+      rolledAt:Date.now()
+    };
+  }catch(e){
+    // Fallback with mock data if API fails
+    const fallbacks=[
+      {name:'Naruto Uzumaki',anime:'Naruto',img:'',desc:'The Number One Surprising Ninja of Konoha.',fav:30000},
+      {name:'Gojo Satoru',anime:'Jujutsu Kaisen',img:'',desc:'The strongest jujutsu sorcerer of the modern era.',fav:45000},
+      {name:'Levi Ackermann',anime:'Attack on Titan',img:'',desc:'Humanity\'s strongest soldier.',fav:40000},
+      {name:'Rem',anime:'Re:Zero',img:'',desc:'A maid of the Roswaal household.',fav:22000},
+      {name:'Zero Two',anime:'Darling in the FranXX',img:'',desc:'A human-klaxosaur hybrid pilot.',fav:18000},
+    ];
+    const f=fallbacks[Math.floor(Math.random()*fallbacks.length)];
+    return{
+      id:'card_'+Date.now()+'_'+Math.random().toString(36).slice(2),
+      ownerId:currentUser.id,characterId:Math.random(),
+      characterName:f.name,animeName:f.anime,image:f.img,
+      description:f.desc,
+      rarity:f.fav>25000?'legendary':f.fav>10000?'epic':'rare',
+      favourites:f.fav,rolledAt:Date.now()
+    };
+  }
+}
+
+// ============================================================
+// ROLL
+// ============================================================
+async function doRoll(){
+  const btn=document.getElementById('rollBtn');
+  const spinner=document.getElementById('rollSpinner');
+  const reveal=document.getElementById('cardReveal');
+  const inner=document.getElementById('cardInner');
+
+  btn.disabled=true;
+  spinner.style.display='block';
+  reveal.style.display='none';
+  inner.classList.remove('flipped');
+
+  const card=await fetchRandomCharacter();
+  spinner.style.display='none';
+
+  // Save card
+  const cards=DB.cards();
+  cards.push(card);
+  DB.saveCards(cards);
+
+  // Update user roll count
+  const users=DB.users();
+  const ui=users.findIndex(x=>x.id===currentUser.id);
+  if(ui>=0){users[ui].rolls=(users[ui].rolls||0)+1;DB.saveUsers(users);currentUser=users[ui];}
+
+  // Build card HTML
+  document.getElementById('cardFrontFace').innerHTML=buildCardHTML(card,false);
+  reveal.style.display='block';
+
+  // Flip
+  setTimeout(()=>{
+    inner.classList.add('flipped');
+    setTimeout(()=>{
+      const front=reveal.querySelector('.anime-card');
+      if(front)front.classList.add('just-rolled');
+    },400);
+  },200);
+
+  updateRollStats();
+  btn.disabled=false;
+
+  const labels={legendary:'✦ LEGENDARY PULL! ✦',epic:'Epic pull!',rare:'Rare find!',common:'A new companion!'};
+  toast(labels[card.rarity]||'Card collected!',card.rarity==='legendary'?'success':'info');
+}
+
+function updateRollStats(){
+  const myCards=DB.cards().filter(c=>c.ownerId===currentUser.id);
+  const users=DB.users();
+  const u=users.find(x=>x.id===currentUser.id);
+  document.getElementById('roll-count').textContent=(u&&u.rolls)||0;
+  document.getElementById('roll-collection-count').textContent=myCards.length;
+}
+
+// ============================================================
+// CARD HTML BUILDER
+// ============================================================
+function buildCardHTML(card, showTrade=true){
+  const rarityIcon={legendary:'⭐',epic:'💜',rare:'💙',common:'⬜'};
+  const imgHtml=card.image
+    ?`<img class="card-img" src="${card.image}" alt="${card.characterName}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    :``;
+  const ph=`<div class="card-img-placeholder" style="${card.image?'display:none':''}">✦</div>`;
+  const tradeBtn=showTrade?`<button class="btn-sm btn-trade" onclick="event.stopPropagation();openTradeModal('${card.id}')">🔄 Trade</button>`:'';
+  return`<div class="anime-card rarity-${card.rarity}" onclick="openCardModal(${JSON.stringify(card).replace(/"/g,'&quot;')})">
+    ${imgHtml}${ph}
+    <div class="card-body">
+      <div class="card-rarity">${rarityIcon[card.rarity]||''} ${card.rarity}</div>
+      <div class="card-char-name">${card.characterName}</div>
+      <div class="card-anime-name">${card.animeName}</div>
+      <div class="card-desc">${card.description||'No description.'}</div>
+      ${showTrade?`<div class="card-actions">${tradeBtn}</div>`:''}
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// COLLECTION
+// ============================================================
+function filterCollection(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderCollection();
+}
+
+function renderCollection(){
+  const myCards=DB.cards().filter(c=>c.ownerId===currentUser.id);
+  const search=(document.getElementById('col-search').value||'').toLowerCase();
+  let filtered=myCards;
+  if(currentFilter!=='all')filtered=filtered.filter(c=>c.rarity===currentFilter);
+  if(search)filtered=filtered.filter(c=>c.characterName.toLowerCase().includes(search)||c.animeName.toLowerCase().includes(search));
+
+  // Stats
+  document.getElementById('col-total').textContent=myCards.length;
+  document.getElementById('col-legendary').textContent=myCards.filter(c=>c.rarity==='legendary').length;
+  document.getElementById('col-epic').textContent=myCards.filter(c=>c.rarity==='epic').length;
+  document.getElementById('col-rare').textContent=myCards.filter(c=>c.rarity==='rare').length;
+
+  const grid=document.getElementById('collectionGrid');
+  if(!filtered.length){
+    grid.innerHTML=`<div class="empty-state"><div class="empty-icon">📦</div><p>${myCards.length===0?'No cards yet — go roll some!':'No cards match your filter.'}</p></div>`;
+    return;
+  }
+  grid.innerHTML=filtered.map(c=>buildCardHTML(c,true)).join('');
+}
+
+// ============================================================
+// TRADE SYSTEM
+// ============================================================
+function renderTradePage(){
+  const users=DB.users().filter(u=>u.id!==currentUser.id);
+  const sel=document.getElementById('trade-target-user');
+  sel.innerHTML='<option value="">— select a user —</option>'+users.map(u=>`<option value="${u.id}">${u.username}</option>`).join('');
+
+  const myCards=DB.cards().filter(c=>c.ownerId===currentUser.id);
+  const myCardSel=document.getElementById('trade-your-card');
+  myCardSel.innerHTML='<option value="">— your cards —</option>'+myCards.map(c=>`<option value="${c.id}">[${c.rarity}] ${c.characterName} (${c.animeName})</option>`).join('');
+
+  renderIncomingOffers();
+  renderSentOffers();
+  checkTradeNotifs();
+}
+
+function loadTargetCards(){
+  const uid=document.getElementById('trade-target-user').value;
+  const sel=document.getElementById('trade-their-card');
+  if(!uid){sel.innerHTML='<option value="">— their cards —</option>';return;}
+  const theirCards=DB.cards().filter(c=>c.ownerId===uid);
+  sel.innerHTML='<option value="">— their cards —</option>'+theirCards.map(c=>`<option value="${c.id}">[${c.rarity}] ${c.characterName} (${c.animeName})</option>`).join('');
+}
+
+function sendTradeOffer(){
+  const toId=document.getElementById('trade-target-user').value;
+  const myCardId=document.getElementById('trade-your-card').value;
+  const theirCardId=document.getElementById('trade-their-card').value;
+  if(!toId||!myCardId||!theirCardId){toast('Please fill all trade fields.','error');return;}
+  const trades=DB.trades();
+  const offer={
+    id:'trade_'+Date.now(),
+    fromId:currentUser.id,fromName:currentUser.username,
+    toId,toName:DB.users().find(u=>u.id===toId)?.username||'Unknown',
+    offeredCardId:myCardId,requestedCardId:theirCardId,
+    status:'pending',createdAt:Date.now()
+  };
+  trades.push(offer);
+  DB.saveTrades(trades);
+  toast('Trade offer sent! ✓','success');
+  renderTradePage();
+  checkTradeNotifs();
+}
+
+function renderIncomingOffers(){
+  const trades=DB.trades().filter(t=>t.toId===currentUser.id&&t.status==='pending');
+  const el=document.getElementById('incomingOffers');
+  if(!trades.length){el.innerHTML='<div style="color:var(--muted);font-size:0.9rem">No pending offers.</div>';return;}
+  el.innerHTML=trades.map(t=>{
+    const cards=DB.cards();
+    const offered=cards.find(c=>c.id===t.offeredCardId);
+    const requested=cards.find(c=>c.id===t.requestedCardId);
+    if(!offered||!requested)return'';
+    return`<div class="trade-offer-card">
+      <img class="offer-img" src="${offered.image||''}" onerror="this.src=''" alt=""/>
+      <div class="offer-info">
+        <div class="char-name">${offered.characterName}</div>
+        <div class="anime-name">${offered.animeName}</div>
+        <div class="rarity-badge" style="color:var(--${offered.rarity==='legendary'?'gold':offered.rarity==='epic'?'epic':offered.rarity==='rare'?'rare':'common'})">${offered.rarity}</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">From: <strong>${t.fromName}</strong> for your <strong>${requested.characterName}</strong></div>
+      </div>
+      <div class="offer-actions">
+        <button class="btn-accept" onclick="acceptTrade('${t.id}')">Accept</button>
+        <button class="btn-decline" onclick="declineTrade('${t.id}')">Decline</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderSentOffers(){
+  const trades=DB.trades().filter(t=>t.fromId===currentUser.id);
+  const el=document.getElementById('sentOffers');
+  if(!trades.length){el.innerHTML='<div style="color:var(--muted);font-size:0.9rem">No sent offers.</div>';return;}
+  const statusColors={pending:'var(--gold)',accepted:'#4ade80',declined:'#f87171'};
+  const cards=DB.cards();
+  el.innerHTML=trades.slice().reverse().map(t=>{
+    const offered=cards.find(c=>c.id===t.offeredCardId);
+    const requested=cards.find(c=>c.id===t.requestedCardId);
+    if(!offered&&!requested)return`<div class="trade-offer-card"><div class="offer-info"><div class="char-name" style="color:var(--muted)">Cards no longer available</div><div style="font-size:0.75rem;color:var(--muted)">To: ${t.toName} · <span style="color:${statusColors[t.status]}">${t.status.toUpperCase()}</span></div></div></div>`;
+    return`<div class="trade-offer-card">
+      <img class="offer-img" src="${offered?.image||''}" onerror="this.src=''" alt=""/>
+      <div class="offer-info">
+        <div class="char-name">${offered?.characterName||'Unknown'} → ${requested?.characterName||'Unknown'}</div>
+        <div class="anime-name">To: ${t.toName}</div>
+        <div style="font-size:0.75rem;margin-top:3px;color:${statusColors[t.status]};font-weight:700">${t.status.toUpperCase()}</div>
+      </div>
+      ${t.status==='pending'?`<button class="btn-decline" style="font-size:0.75rem;padding:0.25rem 0.5rem" onclick="cancelTrade('${t.id}')">Cancel</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+function acceptTrade(tradeId){
+  const trades=DB.trades();
+  const trade=trades.find(t=>t.id===tradeId);
+  if(!trade||trade.status!=='pending'){toast('Trade no longer available.','error');return;}
+  const cards=DB.cards();
+  const offeredIdx=cards.findIndex(c=>c.id===trade.offeredCardId);
+  const requestedIdx=cards.findIndex(c=>c.id===trade.requestedCardId);
+  if(offeredIdx<0||requestedIdx<0){toast('One or more cards no longer exist.','error');declineTrade(tradeId);return;}
+  // Swap owners
+  const tmp=cards[offeredIdx].ownerId;
+  cards[offeredIdx].ownerId=cards[requestedIdx].ownerId;
+  cards[requestedIdx].ownerId=tmp;
+  DB.saveCards(cards);
+  trade.status='accepted';
+  DB.saveTrades(trades);
+  toast('Trade accepted! Cards swapped ✓','success');
+  renderTradePage();
+  updateRollStats();
+}
+
+function declineTrade(tradeId){
+  const trades=DB.trades();
+  const t=trades.find(x=>x.id===tradeId);
+  if(t)t.status='declined';
+  DB.saveTrades(trades);
+  toast('Trade declined.','error');
+  renderTradePage();
+  checkTradeNotifs();
+}
+
+function cancelTrade(tradeId){
+  const trades=DB.trades();
+  const i=trades.findIndex(x=>x.id===tradeId);
+  if(i>=0)trades.splice(i,1);
+  DB.saveTrades(trades);
+  toast('Offer cancelled.','info');
+  renderTradePage();
+}
+
+function checkTradeNotifs(){
+  const pending=DB.trades().filter(t=>t.toId===currentUser?.id&&t.status==='pending');
+  const dot=document.getElementById('trade-notif');
+  if(dot)dot.style.display=pending.length?'inline-block':'none';
+}
+
+// ============================================================
+// BROWSE PAGE
+// ============================================================
+function renderBrowsePage(){
+  const users=DB.users().filter(u=>u.id!==currentUser.id);
+  const cards=DB.cards();
+  const el=document.getElementById('userList');
+  if(!users.length){
+    el.innerHTML='<div style="color:var(--muted);text-align:center;padding:3rem">No other collectors yet. Share the site with friends!</div>';
+    return;
+  }
+  el.innerHTML=users.map(u=>{
+    const uCards=cards.filter(c=>c.ownerId===u.id);
+    const legs=uCards.filter(c=>c.rarity==='legendary').length;
+    return`<div class="user-row">
+      <div class="u-avatar">${u.username[0].toUpperCase()}</div>
+      <div>
+        <div class="u-name">${u.username}</div>
+        <div class="u-cards">${uCards.length} cards · ${legs} ⭐ legendary</div>
+      </div>
+      <button class="u-offer" onclick="quickTrade('${u.id}','${u.username}')">🔄 Trade</button>
+    </div>`;
+  }).join('');
+}
+
+function quickTrade(uid,uname){
+  showPage('trade');
+  setTimeout(()=>{
+    document.getElementById('trade-target-user').value=uid;
+    loadTargetCards();
+    toast(`Selected ${uname} as trade partner`,'info');
+  },100);
+}
+
+// Quick-open trade modal from collection
+function openTradeModal(cardId){
+  showPage('trade');
+  setTimeout(()=>{
+    document.getElementById('trade-your-card').value=cardId;
+    toast('Pick a target user to trade with','info');
+  },100);
+}
+
+// ============================================================
+// KEY EVENTS
+// ============================================================
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeModal();
+  if(e.key==='Enter'){
+    if(document.getElementById('login-screen').classList.contains('active')){
+      if(document.getElementById('form-login').style.display!=='none')handleLogin();
+      else handleRegister();
+    }
+  }
+});
+
+// ============================================================
+// DEMO SEED — create a demo user if first time
+// ============================================================
+(function(){
+  const users=DB.users();
+  if(!users.find(u=>u.username==='demo')){
+    const demo={id:'u_demo',username:'demo',password:'demo',rolls:0,joinedAt:Date.now()};
+    users.push(demo);
+    DB.saveUsers(users);
+  }
+})();
+</script>
+</body>
+</html>
